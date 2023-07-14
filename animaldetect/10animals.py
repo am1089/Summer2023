@@ -1,0 +1,55 @@
+import os
+from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.keras.models import Model
+
+dataset_path = '/mnt/e/animalarchive/raw-img/'
+
+train_datagen = ImageDataGenerator(
+    preprocessing_function=preprocess_input,
+    validation_split=0.2  # 20% of the data will be used for validation
+)
+
+train_generator = train_datagen.flow_from_directory(
+    dataset_path,
+    target_size=(224, 224),  # VGG16 input size is (224, 224)
+    batch_size=32,
+    subset='training'
+)
+
+validation_generator = train_datagen.flow_from_directory(
+    dataset_path,
+    target_size=(224, 224),
+    batch_size=32,
+    subset='validation'
+)
+
+base_model = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+
+# Add custom layers on top of VGG16
+x = base_model.output
+x = GlobalAveragePooling2D()(x)
+x = Dense(512, activation='relu')(x)
+predictions = Dense(train_generator.num_classes, activation='softmax')(x)
+
+model = Model(inputs=base_model.input, outputs=predictions)
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+model.fit(
+    train_generator,
+    steps_per_epoch=train_generator.samples // train_generator.batch_size,
+    epochs=10,  # Adjust the number of epochs as desired
+    validation_data=validation_generator,
+    validation_steps=validation_generator.samples // validation_generator.batch_size
+)
+
+loss, accuracy = model.evaluate(validation_generator)
+print('Validation accuracy:', accuracy)
+
+model.save("vgg16_animals10.keras")
+
+
+
+
