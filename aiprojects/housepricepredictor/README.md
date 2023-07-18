@@ -1,0 +1,1 @@
+This code is a linear regression code. It uses the pandas and sklearn libraries from Python. It reads the CSV dataset and uses the area, room count, and building age to create a linear regression model that can predict an estimated value of a house.
