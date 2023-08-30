@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from multiprocessing import Pool
+import time
 
 def getLinks(keys):
     k = [keys]
@@ -9,7 +10,9 @@ def getLinks(keys):
         'ref_': 'undefined',
         'paginationKey': ''
     }
-    print("Started " + keys)
+    t = time.localtime()
+    currentTime = time.strftime("%H:%M:%S", t)
+    print(currentTime + " Started " + keys)
 
     for id in k:
         url = 'https://www.imdb.com/title/' + id + '/reviews/'
@@ -31,11 +34,16 @@ def getLinks(keys):
                 break
             params['paginationKey'] = pagination_key
             r = requests.get(link,params=params)
-    print("Finished " + keys)
+    t = time.localtime()
+    currentTime = time.strftime("%H:%M:%S", t)
+    print(currentTime + " Finished " + keys)
     return k
 
-movies = ['tt0110912', 'tt1872181', 'tt1990314', 'tt1999995']
+movies = []
 
 if __name__ == '__main__':
-    threads = Pool(2)
+    labels = open('movielabels.txt', 'r')
+    movies = [line.strip() for line in labels.readlines()]
+    # print(movies)
+    threads = Pool(16)
     threads.map(getLinks, movies)
